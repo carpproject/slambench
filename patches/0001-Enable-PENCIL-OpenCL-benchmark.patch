@@ -1,0 +1,68 @@
+diff --git a/kfusion/CMakeLists.txt b/kfusion/CMakeLists.txt
+index c01ab57..1965727 100644
+--- a/kfusion/CMakeLists.txt
++++ b/kfusion/CMakeLists.txt
+@@ -64,6 +64,24 @@ set(kfusion_cuda_srcs
+ 
+ endif(CUDA_FOUND)
+ 
++ # ----------------- PENCIL OpenCL VERSION -----------------
++
++if (OPENCL_FOUND AND DEFINED ENV{PPCG_PATH} AND DEFINED ENV{PENCIL_UTIL_HOME})
++	set(ppcg_path $ENV{PPCG_PATH})
++	set(util_path $ENV{PENCIL_UTIL_HOME})
++	include_directories(${OPENCL_INCLUDE_DIRS} ${ppcg_path})
++
++	add_library(oclUtilities ${ppcg_path}/ocl_utilities.c)
++	add_library(ppcgKernelsHost src/pencil/pencil_kernels_opt_host.c)
++	SET_TARGET_PROPERTIES(ppcgKernelsHost PROPERTIES COMPILE_FLAGS "-std=c99 -I${util_path}/include")
++	target_link_libraries(ppcgKernelsHost oclUtilities)
++
++	add_library(${appname}-pencilCL  src/pencil/kernels.cpp)
++	SET_TARGET_PROPERTIES(${appname}-pencilCL PROPERTIES COMPILE_FLAGS "-I${util_path}/include")
++	target_link_libraries(${appname}-pencilCL   ${common_libraries} ${OPENCL_LIBRARIES} oclUtilities ppcgKernelsHost "-L${util_path}/lib -locl_pencil")
++	add_version(${appname} pencilCL "-D __PENCIL__  -I${util_path}/include" "-L${util_path}/lib -locl_pencil")
++endif()
++
+ #  ----------------- thirdparty ----------------- 
+ 
+ add_subdirectory( thirdparty    )
+diff --git a/kfusion/src/benchmark.cpp b/kfusion/src/benchmark.cpp
+index 85c2783..fc510ee 100644
+--- a/kfusion/src/benchmark.cpp
++++ b/kfusion/src/benchmark.cpp
+@@ -23,6 +23,10 @@
+ #include <iomanip>
+ #include <getopt.h>
+ 
++#ifdef __PENCIL__
++#include <pencil_runtime.h>
++#endif
++
+ inline double tock() {
+ 	struct timespec clockData;
+ 	synchroniseDevices();
+@@ -101,6 +105,10 @@ int main(int argc, char ** argv) {
+ 
+ 	uint frame = 0;
+ 
++#ifdef __PENCIL__
++pencil_init(PENCIL_TARGET_DEVICE_DYNAMIC);
++#endif
++
+ 	Kfusion kfusion(computationSize, config.volume_resolution,
+ 			config.volume_size, init_pose, config.pyramid);
+ 
+@@ -163,6 +171,9 @@ int main(int argc, char ** argv) {
+ 
+ 		timings[0] = tock();
+ 	}
++#ifdef __PENCIL__
++pencil_shutdown();
++#endif
+ 	// ==========     DUMP VOLUME      =========
+ 
+ 	if (config.dump_volume_file != "") {
+-- 
+2.0.0
+

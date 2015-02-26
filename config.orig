@@ -1,0 +1,15 @@
+# SLAMBENCH Configuration
+#
+PENCIL_TOOLS_HOME=
+
+# Path to PPCG repository
+PPCG_PATH=
+
+PENCIL_UTIL_HOME=
+
+# Compiler toolchain prefix
+ARCH=
+
+SLAMBENCH_DIR=
+TOON_INSTALL_DIR=
+
