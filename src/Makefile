@@ -49,7 +49,7 @@ export PPCG_PATH
 prepare:
 	rm -rf ${BENCH_BUILD_DIR}
 	mkdir -p ${BENCH_BUILD_DIR}
-	cd ${BENCH_BUILD_DIR} && cmake ${SLAMBENCH_DIR} -DTOON_INCLUDE_PATH=${TOON_INCLUDE_DIR}
+	cd ${BENCH_BUILD_DIR} && OCLROOT=${OPENCL_SDK} cmake ${SLAMBENCH_DIR} -DTOON_INCLUDE_PATH=${TOON_INCLUDE_DIR} -DCMAKE_CXX_COMPILER=${ARCH}g++ -DCMAKE_C_COMPILER=${ARCH}gcc
 
 build:
 	rm -rf ${BENCH_SRC}
@@ -58,7 +58,7 @@ build:
 	cp pencil_kernels.c ${BENCH_SRC}
 	cp cl_kernel_vector.cl ${BENCH_SRC}
 	cp pencil_kernels_opt_host.c pencil_kernels_opt_kernel.cl ${BENCH_SRC}
-	PENCIL_UTIL_HOME=${PENCIL_UTIL_HOME} make -C ${BENCH_BUILD_DIR}
+	PENCIL_UTIL_HOME=${PENCIL_UTIL_HOME} make -C ${BENCH_BUILD_DIR} OCLROOT=${OPENCL_SDK}
 
 clean:
 	rm -f pencil_kernels_prep.c

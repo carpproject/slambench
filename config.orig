@@ -10,6 +10,9 @@ PENCIL_UTIL_HOME=
 # Compiler toolchain prefix
 ARCH=
 
+# Path to the OpenCL 1.1 SDK
+OPENCL_SDK=
+
 SLAMBENCH_DIR=
 TOON_INSTALL_DIR=
 

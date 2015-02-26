@@ -21,12 +21,23 @@ Installation.
    % cd ${SLAMBENCH_DIR}
    % patch -p1 < ${PATH_TO_REPO}/patches/0001-Enable-PENCIL-OpenCL-benchmark.patch
 
-4. Build PENCIL module:
+4. Create 'config' file
    % cd ${PATH_TO_REPO}
-   % make -C src prepare # Initialize SLAMBench.
-   % make -C src ppcg # Generate OpenCL from PENCIL
-   % make -C src build # Build SLAMBench with PENCIL
+   % cp config.orig config
 
-5. Rebuild PENCIL module (if needed):
-   % make -C src ppcg # If PENCIL code was changed
-   % make -C src build # Rebuild the PENCIL OpenCL module
+5. Within this 'config' file, specify all of the paths required:
+   $PENCIL_TOOLS_HOME - location of pencil optimizer (optimizer executable)
+   $PENCIL_UTIL_HOME  - location of pencil runtime (installation folder)
+   $PPCG_PATH         - location of ppcg executable
+   $ARCH              - for cross compilation, specifies target compiler prefix
+   $OPENCL_SDK        - path to OpenCL SDK, needed to cover the case when OpenCL is not a system-wide install (e.g. when cross compiling on x86 for a Mali Target).
+
+6. Build PENCIL module:
+   % cd ${PATH_TO_REPO}
+   % make -C src prepare    # Initialize SLAMBench.
+   % make -C src ppcg       # Generate OpenCL from PENCIL
+   % make -C src build      # Build SLAMBench with PENCIL
+
+7. Rebuild PENCIL module (if needed):
+   % make -C src ppcg       # If PENCIL code was changed
+   % make -C src build      # Rebuild the PENCIL OpenCL module
