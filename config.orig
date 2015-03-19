@@ -1,18 +1,36 @@
 # SLAMBENCH Configuration
-#
-PENCIL_TOOLS_HOME=
+# Path to PRL library (libprl.so)
 
-# Path to PPCG repository
+PRL_PATH=
+
+# Path to PPCG
+
 PPCG_PATH=
+
+# Path to pencil-driver build, containing include/pencil.h
 
 PENCIL_UTIL_HOME=
 
+# Path to pencil-optimizer
+
+PENCIL_TOOLS_HOME=
+
 # Compiler toolchain prefix
+
 ARCH=
 
 # Path to the OpenCL 1.1 SDK
+
 OPENCL_SDK=
 
+# Path to the SLAMBench_R0rc1 folder
+
 SLAMBENCH_DIR=
+
+# Path to Toon Library installation folder (e.g. /usr/local)
+
 TOON_INSTALL_DIR=
 
+# Path to the location of this repository
+
+PATH_TO_REPO=

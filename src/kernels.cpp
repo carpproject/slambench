@@ -2,7 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <pencil_runtime.h>
+#define PENCIL_LIB_H
+//defining PENCIL_LIB_H is needed to avoid function definition conflicts between
+//pencil_lib.h and cutil_math.h. pencil_lib.h is included from within prl.h.
+#include <prl.h>
 
 #define TICK()    {if (print_kernel_timing) {clock_gettime(CLOCK_MONOTONIC, &tick_clockData);}
 #define TOCK(str,size)  if (print_kernel_timing) {clock_gettime(CLOCK_MONOTONIC, &tock_clockData); std::cerr<< str << " ";\
@@ -70,11 +73,11 @@ void Kfusion::languageSpecificConstructor()
 	if (getenv("KERNEL_TIMINGS"))
 		print_kernel_timing = true;
 
-	pencil_init(PENCIL_TARGET_DEVICE_DYNAMIC);
+	prl_init(PRL_TARGET_DEVICE_DYNAMIC);
 
 	// internal buffers to initialize
 	size_t reductionoutput_size = sizeof(float) * 8 * 32;
-	reductionoutput = (float*) pencil_alloc(reductionoutput_size);
+	reductionoutput = (float*) prl_alloc(reductionoutput_size);
 	memset(reductionoutput, 0, reductionoutput_size);
 
 	ScaledDepth = (float**)  malloc(sizeof(float*)  * iterations.size());
@@ -83,21 +86,21 @@ void Kfusion::languageSpecificConstructor()
 
 	for (unsigned int i = 0; i < iterations.size(); ++i) {
 		size_t size = (computationSize.x * computationSize.y) / (int) pow(2, i);
-		ScaledDepth[i] = (float*)  pencil_alloc(sizeof(float)  * size);
+		ScaledDepth[i] = (float*)  prl_alloc(sizeof(float)  * size);
 		memset(ScaledDepth[i], 0, sizeof(float) * size);
 
-		inputVertex[i] = (float3*) pencil_alloc(sizeof(float3) * size);
+		inputVertex[i] = (float3*) prl_alloc(sizeof(float3) * size);
 		memset(inputVertex[i], 0, sizeof(float3) * size);
 
-		inputNormal[i] = (float3*) pencil_alloc(sizeof(float3) * size);
+		inputNormal[i] = (float3*) prl_alloc(sizeof(float3) * size);
 		memset(inputNormal[i], 0, sizeof(float3) * size);
 	}
 
 	size_t size = computationSize.x * computationSize.y;
-	floatDepth     = (float*)     pencil_alloc(sizeof(float)     * size);
-	vertex         = (float3*)    pencil_alloc(sizeof(float3)    * size);
-	normal         = (float3*)    pencil_alloc(sizeof(float3)    * size);
-	trackingResult = (TrackData*) pencil_alloc(sizeof(TrackData) * size);
+	floatDepth     = (float*)     prl_alloc(sizeof(float)     * size);
+	vertex         = (float3*)    prl_alloc(sizeof(float3)    * size);
+	normal         = (float3*)    prl_alloc(sizeof(float3)    * size);
+	trackingResult = (TrackData*) prl_alloc(sizeof(TrackData) * size);
 
 	memset(floatDepth, 0, sizeof(float) * size);
 	memset(vertex, 0, sizeof(float3) * size);
@@ -106,7 +109,7 @@ void Kfusion::languageSpecificConstructor()
 
 	// Start generating the gaussian.
 	size_t gaussianS = radius * 2 + 1;
-	gaussian = (float*) pencil_alloc(gaussianS * sizeof(float));
+	gaussian = (float*) prl_alloc(gaussianS * sizeof(float));
 	int x;
 	for (unsigned int i = 0; i < gaussianS; i++) {
 		x = i - 2;
@@ -120,23 +123,23 @@ void Kfusion::languageSpecificConstructor()
 
 Kfusion::~Kfusion()
 {
-	pencil_free(reductionoutput);
+	prl_free(reductionoutput);
 	for (unsigned int i = 0; i < iterations.size(); ++i) {
-		pencil_free(ScaledDepth[i]);
-		pencil_free(inputVertex[i]);
-		pencil_free(inputNormal[i]);
+		prl_free(ScaledDepth[i]);
+		prl_free(inputVertex[i]);
+		prl_free(inputNormal[i]);
 	}
 	free(ScaledDepth);
 	free(inputVertex);
 	free(inputNormal);
 
-	pencil_free(vertex);
-	pencil_free(normal);
-	pencil_free(gaussian);
-	pencil_free(floatDepth);
-	pencil_free(trackingResult);
+	prl_free(vertex);
+	prl_free(normal);
+	prl_free(gaussian);
+	prl_free(floatDepth);
+	prl_free(trackingResult);
 
-	pencil_shutdown();
+	prl_shutdown();
 
 	volume.release();
 }

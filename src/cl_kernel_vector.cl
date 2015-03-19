@@ -1,6 +1,17 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 #define INVALID -2
 
+typedef struct short2
+{
+	short x;
+	short y;
+} short2s;
+struct float2
+{
+	float x;
+	float y;
+};
+
 struct float3 {
 	float x;
 	float y;
@@ -36,16 +47,17 @@ inline float c_clamp_float(float f, float a, float b)
 }
 
 inline float2 getVolume(const uint v_size_x, const uint v_size_y, const uint v_size_z,
-                         __global const short2 *v_data, const uint x, const uint y, const uint z)
+                         __global const short2s *v_data, const uint x, const uint y, const uint z)
 {
-	const short2 d = v_data[x + y * v_size_x + z * v_size_x * v_size_y];
+	const short2s d = v_data[x + y * v_size_x + z * v_size_x * v_size_y];
 	return (float2)(d.x * 0.00003051944088f, d.y);
 }
 
 inline void setVolume(const uint v_size_x, const uint v_size_y, const uint v_size_z,
-                      __global short2 *v_data, const uint x, const uint y, const uint z, float2 d)
+                      __global short2s *v_data, const uint x, const uint y, const uint z, float2 d)
 {
-	v_data[x + y * v_size_x + z * v_size_x * v_size_y] = (short2)(d.x * 32766.0f, d.y);
+	v_data[x + y * v_size_x + z * v_size_x * v_size_y].x = d.x * 32766.0f;
+	v_data[x + y * v_size_x + z * v_size_x * v_size_y].y = d.y;
 }
 
 inline float3 add_float3_float3(float3 a, float3 b)
@@ -111,14 +123,14 @@ typedef struct TrackData
 
 inline float c_vs2(const uint x, const uint y, const uint z,
                    const uint v_size_x, const uint v_size_y,
-                   const uint v_size_z, __global const short2 *v_data)
+                   const uint v_size_z, __global const short2s *v_data)
 {
 	return v_data[x + y * v_size_x + z * v_size_x * v_size_y].x;
 }
 
 inline float v_interp(const float3 pos, const uint v_size_x,
                       const uint v_size_y, const uint v_size_z,
-                      __global const short2 *v_data, const float3 v_dim)
+                      __global const short2s *v_data, const float3 v_dim)
 {
 	const float3 scaled_pos = (float3)((pos.x * v_size_x / v_dim.x) - 0.5f,
 	                                   (pos.y * v_size_y / v_dim.y) - 0.5f,
@@ -140,7 +152,7 @@ inline float v_interp(const float3 pos, const uint v_size_x,
 }
 
 inline float4 v_raycast(const uint v_size_x, const uint v_size_y, const uint v_size_z,
-                        __global const short2 *v_data,
+                        __global const short2s *v_data,
                         const float3 v_dim,	const uint2 pos, const Matrix4 view,
                         const float nearPlane, const float farPlane, const float stepVal,
                         const float largestep)
@@ -188,7 +200,7 @@ inline float4 v_raycast(const uint v_size_x, const uint v_size_y, const uint v_s
 }
 
 inline float3 v_grad(float3 pos, const uint v_size_x, const uint v_size_y,
-                      const uint v_size_z, __global const short2 *v_data,
+                      const uint v_size_z, __global const short2s *v_data,
                       const float3 v_dim)
 {
 	const float3 scaled_pos = (float3)((pos.x * v_size_x / v_dim.x) - 0.5f,
@@ -268,10 +280,10 @@ inline float3 v_clamp_float3(float3 v, float a, float b)
 /* Code to be extracted into pencil_kernel_core.cl. */
 inline void initVolume_core(const uint x, const uint y, const uint z,
                             const uint v_size_x, const uint v_size_y, const uint v_size_z,
-                            __global short2 *v_data,
+                            __global short2s *v_data,
                             const float dxVal, const float dyVal)
 {
-	short2 dVal;
+	short2s dVal;
 	dVal.x = dxVal;
 	dVal.y = dyVal;
 	v_data[x + y * v_size_x + z * v_size_x * v_size_y] = dVal;
@@ -334,7 +346,7 @@ inline void raycast_core(const uint x, const uint y,
                          const uint integration_size_x,
                          const uint integration_size_y,
                          const uint integration_size_z,
-                         __global const short2 *integration_data,
+                         __global const short2s *integration_data,
                          const struct float3 integration_dim, const Matrix4 view,
                          const float nearPlane, const float farPlane,
                          const float stepVal, const float largestep)
@@ -374,7 +386,7 @@ inline struct uchar3 renderVolume_core(const uint x, const uint y,
                                  const uint volume_size_x,
                                  const uint volume_size_y,
                                  const uint volume_size_z,
-                                 __global const short2 *volume_data,
+                                 __global const short2s *volume_data,
                                  const struct float3 volume_dim, const Matrix4 view,
                                  const float nearPlane, const float farPlane,
                                  const float stepVal, const float largestep,
@@ -561,7 +573,7 @@ inline struct float3 depth2vertex_core(const uint x, const uint y,
 
 inline void integrateKernel_core(const uint vol_size_x, const uint vol_size_y,
                                  const uint vol_size_z, const struct float3 vol_dim,
-                                 __global short2 *vol_data,
+                                 __global short2s *vol_data,
                                  const uint x, const uint y,
                                  const uint depthSize_x, const uint depthSize_y,
                                  __global const float *depth,
@@ -595,7 +607,7 @@ inline void integrateKernel_core(const uint vol_size_x, const uint vol_size_y,
 					if (diff > -mu) {
 						const float sdf = fmin(1.0f, diff / mu);
 						float2 data = getVolume(vol_size_x, vol_size_y, vol_size_z, vol_data, x, y, z);
-						data.x = c_clamp_float((data.y * data.x + sdf) / (data.y + 1), -1.0f, 1.0f);
+						data.x = clamp((data.y * data.x + sdf) / (data.y + 1), -1.0f, 1.0f);
 						data.y = fmin(data.y + 1, maxweight);
 						setVolume(vol_size_x, vol_size_y, vol_size_z, vol_data, x, y, z, data);
 					}
